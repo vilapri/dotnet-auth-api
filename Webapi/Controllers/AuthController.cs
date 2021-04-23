@@ -56,19 +56,19 @@ namespace Webapi.Controllers
                 || String.IsNullOrEmpty(registerModel.Password)
                 || String.IsNullOrEmpty(registerModel.ConfirmPassword))
             {
-                throw new Exception("Missing fields");
+                return BadRequest("Missing fields");
             }
 
             if (registerModel.Password != registerModel.ConfirmPassword)
             {
-                throw new Exception("Password missmatch");
+                return BadRequest("Password missmatch");
             }
 
             bool registerSuccess = await _authService.Register(registerModel);
 
             if (!registerSuccess)
             {
-                throw new Exception("Unexpected error");
+                return BadRequest("Unexpected Error");
             }
 
             return Ok();
