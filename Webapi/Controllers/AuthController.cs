@@ -30,26 +30,6 @@ namespace Webapi.Controllers
             _claimsService = claimsService;
         }
 
-        [HttpPut("change-account")]
-        public async Task<IActionResult> ChangeAccount(AccountChangeRequest accountChangeRequest)
-        {
-            Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
-
-            await _authService.ChangeAccount(userId, accountChangeRequest);
-
-            return Ok();
-        }
-
-        [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword(PasswordChangeRequest passwordChangeRequest)
-        {
-            Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
-
-            await _authService.ChangePassword(userId, passwordChangeRequest);
-
-            return Ok();
-        }
-
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterModel registerModel)
@@ -59,12 +39,12 @@ namespace Webapi.Controllers
                 || String.IsNullOrEmpty(registerModel.Password)
                 || String.IsNullOrEmpty(registerModel.ConfirmPassword))
             {
-                return BadRequest("Missing fields");
+                return BadRequest(EAuthErrors.RegisterMissingFields);
             }
 
             if (registerModel.Password != registerModel.ConfirmPassword)
             {
-                return BadRequest("Password missmatch");
+                return BadRequest(EAuthErrors.RegisterPasswordMissmatch);
             }
 
             try
@@ -73,7 +53,7 @@ namespace Webapi.Controllers
 
                 if (!registerSuccess)
                 {
-                    return BadRequest("Unexpected Error");
+                    return BadRequest(EAuthErrors.RegisterUnexpectedError);
                 }
             }
             catch (Exception e)
@@ -109,8 +89,28 @@ namespace Webapi.Controllers
             }
             else
             {
-                return BadRequest("Incorrect login");
+                return BadRequest(EAuthErrors.LoginIncorrect);
             }
+        }
+
+        [HttpPut("change-account")]
+        public async Task<IActionResult> ChangeAccount(AccountChangeRequest accountChangeRequest)
+        {
+            Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
+
+            await _authService.ChangeAccount(userId, accountChangeRequest);
+
+            return Ok();
+        }
+
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword(PasswordChangeRequest passwordChangeRequest)
+        {
+            Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
+
+            await _authService.ChangePassword(userId, passwordChangeRequest);
+
+            return Ok();
         }
     }
 }
