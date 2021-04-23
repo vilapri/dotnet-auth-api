@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Webapi.Models.Enums;
 
 namespace Webapi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("auth")]
     public class AuthController : ControllerBase
@@ -28,7 +30,7 @@ namespace Webapi.Controllers
             _claimsService = claimsService;
         }
 
-        [HttpPost("account")]
+        [HttpPut("change-account")]
         public async Task<IActionResult> ChangeAccount(AccountChangeRequest accountChangeRequest)
         {
             Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
@@ -38,7 +40,7 @@ namespace Webapi.Controllers
             return Ok();
         }
 
-        [HttpPost("password")]
+        [HttpPut("change-password")]
         public async Task<IActionResult> ChangePassword(PasswordChangeRequest passwordChangeRequest)
         {
             Guid userId = _claimsService.GetGuidClaim(HttpContext.User, EClaimTypes.UserId).Value;
@@ -48,6 +50,7 @@ namespace Webapi.Controllers
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterModel registerModel)
         {
@@ -64,16 +67,24 @@ namespace Webapi.Controllers
                 return BadRequest("Password missmatch");
             }
 
-            bool registerSuccess = await _authService.Register(registerModel);
-
-            if (!registerSuccess)
+            try
             {
-                return BadRequest("Unexpected Error");
+                bool registerSuccess = await _authService.Register(registerModel);
+
+                if (!registerSuccess)
+                {
+                    return BadRequest("Unexpected Error");
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
             }
 
             return Ok();
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
